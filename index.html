@@ -1,0 +1,110 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tentang Saya - Krin</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: linear-gradient(135deg, #2e86de, #00c6ff);
+      color: white;
+      padding: 40px 20px;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 30px 0;
+    }
+    button, a button {
+      background: #2e86de;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #1a5fb4;
+      transform: scale(1.05);
+    }
+    .content-container {
+      min-height: 200px;
+      position: relative;
+    }
+    .box {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: absolute;
+      left: 0; right: 0;
+      top: 0;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 0.4s ease;
+      pointer-events: none;
+    }
+    .box.show {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Halo, Aku Krin!</h1>
+    <p>Kenalan singkat tentang diriku</p>
+  </header>
+  <nav>
+    <button onclick="showBox('tentang')">Tentang Saya</button>
+    <button onclick="showBox('hobi')">Hobi</button>
+    <button onclick="showBox('cita')">Cita-Cita</button>
+    <a href="postingan.html" style="text-decoration: none;"><button>Postingan</button></a>
+  </nav>
+  <div class="content-container">
+    <div id="tentang" class="box">
+      <h2>Tentang Saya</h2>
+      <p>Aku adalah pelajar yang menyukai dunia teknologi.</p>
+    </div>
+    <div id="hobi" class="box">
+      <h2>Hobi</h2>
+      <p>Ngoding, desain web, dan nonton anime.</p>
+    </div>
+    <div id="cita" class="box">
+      <h2>Cita-Cita</h2>
+      <p>Menjadi developer profesional.</p>
+    </div>
+  </div>
+  <script>
+    let currentBox = null;
+    function showBox(id) {
+      if (currentBox) {
+        currentBox.classList.remove('show');
+        setTimeout(() => {
+          document.getElementById(id).classList.add('show');
+          currentBox = document.getElementById(id);
+        }, 400);
+      } else {
+        document.getElementById(id).classList.add('show');
+        currentBox = document.getElementById(id);
+      }
+    }
+  </script>
+</body>
+</html>
