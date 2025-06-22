@@ -5,9 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tentang Saya - Krin</title>
-  <!-- Ganti ke Firebase versi 8 agar firebase.* tersedia global -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="firebase-config.js"></script>
   <style>
     body {
@@ -78,6 +78,10 @@
       background: #2c2c2c;
       color: #eee;
     }
+    #profileBox {
+      margin: 20px;
+      font-weight: bold;
+    }
     @media (max-width: 600px) {
       nav {
         flex-direction: column;
@@ -98,12 +102,14 @@
   <header>
     <h1>Halo, Aku Krin!</h1>
     <p>Kenalan singkat tentang diriku</p>
+    <div id="profileBox">👤 Belum login</div>
   </header>
   <nav>
     <button onclick="showBox('tentang')">Tentang Saya</button>
     <button onclick="showBox('hobi')">Hobi</button>
     <button onclick="showBox('cita')">Cita-Cita</button>
     <a href="postingan.html"><button>Postingan</button></a>
+    <button id="editNameBtn" style="display:none; background:#f39c12" onclick="editName()">Edit Nama</button>
     <a href="login.html" id="loginBtn"><button>Login</button></a>
     <button onclick="logout()" id="logoutBtn" style="display:none; background:#e74c3c">Logout</button>
     <button onclick="toggleDarkMode()">🌙/☀️ Mode</button>
@@ -143,12 +149,28 @@
     firebase.auth().onAuthStateChanged(user => {
       const loginBtn = document.getElementById('loginBtn');
       const logoutBtn = document.getElementById('logoutBtn');
+      const profileBox = document.getElementById('profileBox');
+      const editNameBtn = document.getElementById('editNameBtn');
+
       if (user) {
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
+        editNameBtn.style.display = 'inline-block';
+
+        const uid = user.uid;
+        const db = firebase.firestore();
+        db.collection('users').doc(uid).get().then(doc => {
+          if (doc.exists) {
+            profileBox.textContent = `👤 ${doc.data().name || user.email}`;
+          } else {
+            profileBox.textContent = `👤 ${user.email}`;
+          }
+        });
       } else {
         loginBtn.style.display = 'inline-block';
         logoutBtn.style.display = 'none';
+        editNameBtn.style.display = 'none';
+        profileBox.textContent = '👤 Belum login';
       }
     });
 
@@ -156,6 +178,15 @@
       firebase.auth().signOut().then(() => {
         window.location.reload();
       });
+    }
+
+    function editName() {
+      const newName = prompt("Masukkan nama baru kamu:");
+      if (newName && firebase.auth().currentUser) {
+        const uid = firebase.auth().currentUser.uid;
+        firebase.firestore().collection('users').doc(uid).set({ name: newName });
+        document.getElementById('profileBox').textContent = `👤 ${newName}`;
+      }
     }
   </script>
 </body>
