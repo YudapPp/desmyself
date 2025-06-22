@@ -1,8 +1,8 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tentang Saya - Krin</title>
   <style>
     body {
@@ -63,6 +63,20 @@
       transform: scale(1);
       pointer-events: auto;
       position: relative;
+    }
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+      button, a button {
+        width: 90%;
+        font-size: 18px;
+      }
+      .box {
+        width: 90%;
+        padding: 20px;
+      }
     }
   </style>
 </head>
