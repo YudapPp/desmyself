@@ -1,0 +1,47 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Krin</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f5f5f5; padding: 30px; }
+    input { padding: 10px; width: 80%; max-width: 300px; margin: 10px; border-radius: 10px; border: 1px solid #ccc; }
+    button { padding: 10px 20px; border: none; background: #2e86de; color: white; border-radius: 20px; cursor: pointer; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Login Admin</h1>
+  <input type="email" id="email" placeholder="Email" /><br />
+  <input type="password" id="password" placeholder="Password" /><br />
+  <button onclick="login()">Login</button>
+  <button onclick="register()">Register</button>
+  <p id="status"></p>
+  <script>
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        window.location.href = 'postingan.html';
+      } catch (err) {
+        document.getElementById('status').innerText = 'Login gagal: ' + err.message;
+      }
+    }
+    async function register() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        document.getElementById('status').innerText = 'Registrasi berhasil. Silakan login.';
+      } catch (err) {
+        document.getElementById('status').innerText = 'Registrasi gagal: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
