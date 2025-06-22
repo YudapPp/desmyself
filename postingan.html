@@ -1,91 +1,139 @@
+<!-- postingan.html dengan CRUD -->
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Postingan - Krin</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      color: #2e86de;
-      text-align: center;
-    }
-    .search-box {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .search-box input {
-      padding: 10px;
-      width: 90%;
-      max-width: 300px;
-      border-radius: 20px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-    .post {
-      background: white;
-      padding: 20px;
-      margin: 0 auto 20px;
-      max-width: 700px;
-      border-left: 5px solid #2e86de;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-    .post img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    .hidden {
-      display: none;
-    }
-    a {
-      text-decoration: none;
-      color: #2e86de;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+    .post { background: white; margin: 10px auto; padding: 15px; max-width: 700px; border-radius: 10px; box-shadow: 0 0 5px #ccc; position: relative; }
+    .post img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
+    .post small { display: block; margin-top: 5px; color: #666; }
+    input, textarea { display: block; margin: 10px auto; padding: 10px; width: 90%; max-width: 500px; }
+    button { padding: 10px 20px; background: #2e86de; color: white; border: none; border-radius: 20px; cursor: pointer; margin: 5px; }
+    #logoutBtn { float: right; background: #e74c3c; }
+    .actions { position: absolute; top: 10px; right: 10px; }
+    .actions button { font-size: 12px; padding: 5px 10px; }
+    .search-box { text-align: center; margin: 10px; }
+    .search-box input { width: 90%; max-width: 300px; padding: 10px; border-radius: 10px; }
   </style>
 </head>
 <body>
-  <h1>📢 Postingan Terbaru</h1>
+  <button id="logoutBtn" onclick="logout()">Logout</button>
+  <h1>📢 Postingan</h1>
+
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Cari postingan..." oninput="searchPosts()">
   </div>
-  <div class="post" data-keywords="demon slayer anime action">
-    <a href="postingan1.html" style="text-decoration: none; color: inherit;">
-      <h2>Review Anime Demon Slayer</h2>
-      <p>Anime ini punya animasi luar biasa dan alur cerita emosional.</p>
-      <img src="img/demon.jpg" alt="Demon Slayer">
-      <small>Diposting: 21 Juni 2025</small>
-    </a>
+
+  <div id="uploadForm" style="display:none">
+    <h3>Buat/Edit Postingan</h3>
+    <input type="text" id="title" placeholder="Judul" />
+    <textarea id="desc" placeholder="Deskripsi"></textarea>
+    <input type="file" id="img" accept="image/*" />
+    <input type="hidden" id="editId">
+    <button onclick="uploadPost()">Simpan</button>
   </div>
-  <div class="post" data-keywords="Gintama anime comedy terbaik">
-    <a href="postingan2.html" style="text-decoration: none; color: inherit;">
-      <h2>Gintama Anime Comedy Terbaik Menurutku, Kenapa?</h2>
-      <p>Gintama adalah anime bergenre Komedi, aksi, fiksi ilmiah, drama, jidaigeki.</p>
-      <img src="img/gin.jpg" alt="Ngoding">
-      <small>Diposting: 20 Juni 2025</small>
-    </a>
-  </div>
-  <a href="index.html">← Kembali ke Beranda</a>
+
+  <div id="posts"></div>
+
   <script>
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('uploadForm').style.display = 'block';
+        loadPosts();
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+
+    function logout() {
+      auth.signOut();
+    }
+
+    function uploadPost() {
+      const title = document.getElementById('title').value;
+      const desc = document.getElementById('desc').value;
+      const file = document.getElementById('img').files[0];
+      const editId = document.getElementById('editId').value;
+
+      if (file) {
+        const storageRef = storage.ref('images/' + Date.now() + '_' + file.name);
+        storageRef.put(file).then(snapshot => {
+          snapshot.ref.getDownloadURL().then(url => {
+            saveToFirestore(title, desc, url, editId);
+          });
+        });
+      } else {
+        saveToFirestore(title, desc, '', editId);
+      }
+    }
+
+    function saveToFirestore(title, desc, image, id = '') {
+      const data = { title, desc, image, date: new Date() };
+      if (id) {
+        db.collection('posts').doc(id).update(data);
+      } else {
+        db.collection('posts').add(data);
+      }
+      document.getElementById('title').value = '';
+      document.getElementById('desc').value = '';
+      document.getElementById('img').value = '';
+      document.getElementById('editId').value = '';
+    }
+
+    function loadPosts() {
+      db.collection('posts').orderBy('date', 'desc').onSnapshot(snapshot => {
+        const container = document.getElementById('posts');
+        container.innerHTML = '';
+        snapshot.forEach(doc => {
+          const post = doc.data();
+          const id = doc.id;
+          container.innerHTML += `
+            <div class="post">
+              <div class="actions">
+                <button onclick="editPost('${id}', '${post.title}', \`${post.desc}\`)" style="background:#f39c12">Edit</button>
+                <button onclick="deletePost('${id}')" style="background:#c0392b">Hapus</button>
+              </div>
+              <h3>${post.title}</h3>
+              <p>${post.desc}</p>
+              ${post.image ? `<img src="${post.image}" />` : ''}
+              <small>${new Date(post.date.seconds * 1000).toLocaleDateString()}</small>
+            </div>
+          `;
+        });
+      });
+    }
+
+    function deletePost(id) {
+      if (confirm('Yakin ingin menghapus postingan ini?')) {
+        db.collection('posts').doc(id).delete();
+      }
+    }
+
+    function editPost(id, title, desc) {
+      document.getElementById('title').value = title;
+      document.getElementById('desc').value = desc;
+      document.getElementById('editId').value = id;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function searchPosts() {
-      const input = document.getElementById('searchInput').value.toLowerCase();
+      const keyword = document.getElementById('searchInput').value.toLowerCase();
       const posts = document.querySelectorAll('.post');
       posts.forEach(post => {
-        const keywords = post.getAttribute('data-keywords');
-        if (keywords.toLowerCase().includes(input)) {
-          post.classList.remove('hidden');
-        } else {
-          post.classList.add('hidden');
-        }
+        const text = post.innerText.toLowerCase();
+        post.style.display = text.includes(keyword) ? 'block' : 'none';
       });
     }
   </script>
